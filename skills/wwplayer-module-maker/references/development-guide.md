@@ -115,6 +115,8 @@ return data.items;
 
 Cookie、Token、API Key 与登录流程按实际来源和用户需求扩展，不是制作所有模块都要先填写的条件。需要时预留本地配置即可；某个接口本身确实要求认证时，说明其要求与尚待配置的验收范围，不将认证失败处理成无结果。
 
+请求头还受目标传输策略影响。默认 Chromium 策略下，跨来源的完整路径 Referer 可能触发 ERR_BLOCKED_BY_CLIENT；来源接受 origin 根地址时可以显式采用，但同来源完整路径仍合法，不能一律裁剪。Node/curl 成功不能替代 Electron/WWPlayer 请求验证。执行检查和分层证据见[验证与交付](verification.md)。
+
 浏览器方式使用模块与来源隔离会话；它改变请求通路，不提供任意页面点击、脚本注入、Node、下载、弹窗或原生权限。HTTP 失败不自动切换请求方式。
 
 ## 5. 公共元数据、HTML 与存储
@@ -225,7 +227,9 @@ node scripts/check-module.mjs "/path/to/my-module.js" --json
 node --test scripts/test-package.mjs
 ```
 
-check-module 会编译并执行脚本顶层，检查元数据、声明函数和入口组合；仅用于自己制作或已审阅的模块。它不是宿主沙箱，也不实现完整宿主；业务网络 API 不可用。通过只说明基础契约可解析。
+check-module 会编译并执行脚本顶层，检查元数据、声明函数和入口组合；结果仅为 declaration。它不执行业务入口，通过只说明基础契约可解析。仅检查自己制作或已审阅的代码，它不是宿主沙箱。
+
+本次生成的模块还需要自己的最小行为测试。随包 `scripts/module-test-runtime.mjs` 可执行入口、注入响应样本并检查已建模的请求限制；具体用法及验证层级见[验证与交付](verification.md)。skill 自身的测试通过不能代替新模块的测试。
 
 ## 10. 在 WWPlayer 中验收
 

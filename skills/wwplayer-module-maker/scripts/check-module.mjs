@@ -11,42 +11,65 @@ const categories = new Map([
 ]);
 const record = (value) => value && typeof value === "object" && !Array.isArray(value);
 
+// Shared bootstrap for declaration inspection and explicit fixture execution.
+// This evaluates trusted development code; it is not a security sandbox.
+export function createModuleContext(code, { file = "module.js", Widget, fetch: fetchImpl } = {}) {
+  new vm.Script(code, { filename: file });
+  const unavailable = (name) => () => { throw new Error(`安装检查期间不能调用宿主业务 API：${name}`); };
+  const context = vm.createContext({
+    URL, URLSearchParams, TextEncoder, TextDecoder, Headers, Request, Response, atob, btoa,
+    console: { log() {}, info() {}, warn() {}, error() {} },
+    fetch: fetchImpl || unavailable("fetch"),
+    Widget: Widget || {
+      http: Object.fromEntries(["get", "post", "request"].map((name) => [name, unavailable(`Widget.http.${name}`)])),
+      tmdb: { get: unavailable("Widget.tmdb.get") },
+      html: { load: unavailable("Widget.html.load") },
+      dom: Object.fromEntries(["parse", "select", "text", "attr", "remove"].map((name) => [name, unavailable(`Widget.dom.${name}`)])),
+      storage: { get: (_key, fallback) => fallback, getAsync: async (_key, fallback) => fallback,
+        set: unavailable("Widget.storage.set"), remove: unavailable("Widget.storage.remove") },
+      sharedCache: { get: () => undefined, set: unavailable("Widget.sharedCache.set"), remove: unavailable("Widget.sharedCache.remove") },
+    },
+  });
+  context.self = context;
+  const bootstrap = `(function() {\n${code}\n
+    return {
+      metadata: typeof WidgetMetadata !== "undefined" ? WidgetMetadata : globalThis.WidgetMetadata,
+      resolve: function(name) {
+        var parts = name.split("."), target = eval(parts.shift()), owner;
+        for (var part of parts) { owner = target; target = target[part]; }
+        return { target: target, owner: owner };
+      },
+      has: function(name) { try { return typeof this.resolve(name).target === "function"; } catch { return false; } },
+      invoke: function(name, params) {
+        var entry = this.resolve(name);
+        if (typeof entry.target !== "function") throw new Error("模块函数不存在：" + name);
+        return entry.target.call(entry.owner, params === undefined ? {} : params);
+      }
+    };
+  }).call(globalThis)`;
+  context.__wwpSkillLoaded = new vm.Script(bootstrap, { filename: file }).runInContext(context, { timeout: 1000 });
+  return {
+    metadata: context.__wwpSkillLoaded.metadata,
+    has(name) {
+      return functionPath.test(name) && new vm.Script(`__wwpSkillLoaded.has(${JSON.stringify(name)})`).runInContext(context, { timeout: 1000 });
+    },
+    invoke(name, params) {
+      if (!functionPath.test(name)) throw new Error("模块函数名无效。");
+      context.__wwpSkillParams = params;
+      return new vm.Script(`__wwpSkillLoaded.invoke(${JSON.stringify(name)}, __wwpSkillParams)`).runInContext(context, { timeout: 1000 });
+    },
+  };
+}
+
 export function inspectModuleCode(code, file = "module.js") {
-  const result = { file, id: "", title: "", version: "", entries: [], detail: false, errors: [], warnings: [] };
+  const result = { scope: "declaration", file, id: "", title: "", version: "", entries: [], detail: false, errors: [], warnings: [] };
   try {
     if (!code.trim()) throw new Error("脚本为空。");
     if (Buffer.byteLength(code, "utf8") > 512 * 1024) throw new Error("脚本超过 512 KiB。");
-    new vm.Script(code, { filename: file });
-    const unavailable = (name) => () => { throw new Error(`安装检查期间不能调用宿主业务 API：${name}`); };
-    const context = vm.createContext({
-      URL, URLSearchParams, TextEncoder, TextDecoder, atob, btoa,
-      console: { log() {}, info() {}, warn() {}, error() {} },
-      fetch: unavailable("fetch"),
-      Widget: {
-        http: Object.fromEntries(["get", "post", "request"].map((name) => [name, unavailable(`Widget.http.${name}`)])),
-        tmdb: { get: unavailable("Widget.tmdb.get") },
-        html: { load: unavailable("Widget.html.load") },
-        dom: Object.fromEntries(["parse", "select", "text", "attr", "remove"].map((name) => [name, unavailable(`Widget.dom.${name}`)])),
-        storage: { get: (_key, fallback) => fallback, getAsync: async (_key, fallback) => fallback,
-          set: unavailable("Widget.storage.set"), remove: unavailable("Widget.storage.remove") },
-        sharedCache: { get: () => undefined, set: unavailable("Widget.sharedCache.set"), remove: unavailable("Widget.sharedCache.remove") },
-      },
-    });
-    context.self = context;
-    const bootstrap = `(function() {\n${code}\nreturn {
-      metadata: typeof WidgetMetadata !== "undefined" ? WidgetMetadata : globalThis.WidgetMetadata,
-      has: function(name) {
-        try {
-          var parts = name.split("."), target = eval(parts.shift());
-          for (var part of parts) target = target[part];
-          return typeof target === "function";
-        } catch { return false; }
-      }
-    }; }).call(globalThis)`;
-    context.__wwpSkillLoaded = new vm.Script(bootstrap, { filename: file }).runInContext(context, { timeout: 1000 });
-    const metadata = context.__wwpSkillLoaded.metadata;
+    const loaded = createModuleContext(code, { file });
+    const metadata = loaded.metadata;
     if (!record(metadata)) throw new Error("没有找到对象形式的 WidgetMetadata。");
-    const has = (name) => functionPath.test(name) && new vm.Script(`__wwpSkillLoaded.has(${JSON.stringify(name)})`).runInContext(context, { timeout: 1000 });
+    const has = (name) => loaded.has(name);
     result.id = String(metadata.id || "");
     result.title = String(metadata.title || metadata.name || "");
     result.version = String(metadata.version || "");
@@ -116,7 +139,7 @@ export function inspectModuleFile(file) {
   try {
     return inspectModuleCode(fs.readFileSync(file, "utf8"), file);
   } catch (error) {
-    return { file, id: "", title: "", version: "", entries: [], detail: false, errors: [error.message], warnings: [] };
+    return { scope: "declaration", file, id: "", title: "", version: "", entries: [], detail: false, errors: [error.message], warnings: [] };
   }
 }
 
@@ -135,10 +158,11 @@ function main(args) {
   const results = files.map(inspectModuleFile);
   if (json) console.log(JSON.stringify(results, null, 2));
   else for (const result of results) {
-    console.log(`${result.errors.length ? "FAIL" : "PASS"} ${result.file} · ${result.entries.length} 个入口`);
+    console.log(`DECLARATION ${result.errors.length ? "FAIL" : "PASS"} ${result.file} · ${result.entries.length} 个入口`);
     for (const message of result.errors) console.error(`  错误：${message}`);
     for (const message of result.warnings) console.log(`  建议：${message}`);
   }
+  if (!json) console.log("仅检查语法与声明；未执行列表、详情、资源或真实网络。");
   if (results.some((result) => result.errors.length)) process.exitCode = 1;
 }
 

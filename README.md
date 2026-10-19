@@ -1,6 +1,6 @@
 # WWPlayer Module Maker
 
-为 WWPlayer 制作模块的独立 Agent Skill，内置开发指南、迁移说明、8 个 JS 模板和基础校验工具。无需获取 WWPlayer 源码或安装客户端开发依赖。
+为 WWPlayer 制作模块的独立 Agent Skill，内置开发指南、迁移说明、8 个 JS 模板、声明检查及入口执行测试工具。无需获取 WWPlayer 源码或安装客户端开发依赖。
 
 按影视内容、字幕、弹幕三类用途提供制作向导；列表、分类、搜索、详情、季集和播放解析等能力按需组合。接口基线为 WWPlayer 宿主契约 7。
 
@@ -41,7 +41,7 @@ skill 先了解想做影视内容、字幕还是弹幕模块，再逐步了解�
 
 Cookie、Token、API Key、自定义请求头及登录认证只在可能相关时提示，可按需保留本地配置，不是固定必答题。来源确实需要认证的接口仍会说明实际要求及待验证部分。
 
-已有完整需求、来源或 JS 时也可以直接给出，skill 会沿用已知信息继续制作，不重复问答。输出为本地 JS 与使用说明，之后在 WWPlayer 的“设置 → 模块”中导入。
+已有完整需求、来源或 JS 时也可以直接给出，skill 会沿用已知信息继续制作，不重复问答。首次交付前会针对生成的 JS 做最小行为测试，输出模块、测试与使用说明，分别说明来源、宿主及播放器验证到哪里。
 
 skill 安装到 AI 编程工具中；生成的 JS 才是导入播放器的模块。
 
@@ -51,8 +51,10 @@ skill 安装到 AI 编程工具中；生成的 JS 才是导入播放器的模块
 - [制作配方](skills/wwplayer-module-maker/references/recipes.md)：按确认的能力映射技术入口并选择模板。
 - [问答指引](skills/wwplayer-module-maker/references/interview.md)：先明确用途，再逐步了解能力和来源。
 - [迁移说明](skills/wwplayer-module-maker/references/migration.md)：外部 Widget 与 WWPlayer 的接口差异。
+- [验证与交付](skills/wwplayer-module-maker/references/verification.md)：验证本次生成模块，区分声明、执行样本、真实接口和应用消费。
 - [8 个可导入模板](skills/wwplayer-module-maker/assets/templates/)：离线目录、公共元数据、JSON、HTML、纯资源、字幕、弹幕及组合来源。
-- [基础校验工具](skills/wwplayer-module-maker/scripts/check-module.mjs)：无需 npm 依赖，检查脚本语法、声明与函数。
+- [声明检查](skills/wwplayer-module-maker/scripts/check-module.mjs)：无需 npm 依赖，检查脚本语法、声明与函数。
+- [入口执行测试](skills/wwplayer-module-maker/scripts/module-test-runtime.mjs)：用响应样本执行真实函数，检查参数、存储与默认 Chromium Referer 限制。
 
 ## 本地检查
 
@@ -66,7 +68,9 @@ node skills/wwplayer-module-maker/scripts/check-module.mjs ./my-module.js --json
 
 安装后的工具在 skill 自己的 scripts 目录中，也可以从任意工作目录通过绝对路径调用。无需运行 npm install。
 
-检查器会执行被检查脚本的顶层，适用于自己制作或已审阅的代码，不是宿主沙箱；宿主业务 API 不可用。基础检查通过不等于真实接口、媒体播放或字幕装载已验收，最终按指南在 WWPlayer 中检查对应使用路径。
+声明检查输出 DECLARATION PASS，只执行脚本顶层，不执行业务入口。包自身 npm test 通过也不能替代新模块的测试。入口测试工具不自动联网，并非完整宿主或安全沙箱，只用于自己制作或已审阅的代码。
+
+生成的模块需要自己的行为测试；列表、详情、资源应沿用返回的实际身份，API 与媒体请求头分别验证。Node/curl 请求成功不能替代 Electron/WWPlayer 验证，返回播放 URL 不等于已有画面、声音或可拖动。具体例子见验证与交付指南。
 
 示例不附带内容服务、视频文件或账号。离线示例的浏览和详情无需网络，播放时填写自己的媒体 URL；其他模板按实际来源适配接口。
 
