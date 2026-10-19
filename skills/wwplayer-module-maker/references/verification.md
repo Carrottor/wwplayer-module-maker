@@ -76,6 +76,7 @@ test("本次模块：列表到详情和资源", async () => {
     id: detail.id, type: "movie", link: items[0].link
   });
   assert.equal(sources.length, 1);
+  // 这些线路若经 Chromium 探测 / 读取，则检查该通路的请求元数据。
   for (const source of sources) validateChromiumRequest(source.url, source.headers);
 });
 ```
@@ -93,7 +94,9 @@ Electron 默认 referrerPolicy 为 strict-origin-when-cross-origin，说明见�
 - 同来源完整 Referer 路径可以合法使用。不能将所有 Referer 一律截断，也不能为让测试通过而删除来源真正需要的头。
 - 来源确实要求与宿主策略冲突的完整引用时，说明需要解决的宿主能力；模块不能靠 Node 请求成功掩盖应用失败。
 
-这个检查会在 fixture HTTP 调用前执行。资源入口返回的线路也要显式检查，因为媒体读取使用的 URL / 请求头与列表 API 不同。它不等于已读取真实媒体；仍需按实际条件通过宿主请求检查状态、内容类型 / 文件头及必要的 Range。
+这个检查会在 fixture HTTP 调用前执行。资源入口返回的线路要按实际探测和播放后端分别验证，因为媒体读取使用的 URL / 请求头与列表 API 不同。只有会经 Chromium 发送的请求才适用这份策略检查；不能据此判定 mpv 等其他后端的一切完整 Referer 都无效，也不能统一裁剪它们。
+
+元数据检查不等于已读取真实媒体；仍需按实际条件通过目标宿主请求检查状态、内容类型 / 文件头及必要的 Range。
 
 案例边界来自真实 Electron 本地回归：跨来源完整路径失败，根地址成功，同来源完整路径成功。公开回归使用虚构来源，不绑定某个站点或用户影片。
 
