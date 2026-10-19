@@ -32,12 +32,14 @@ https://github.com/Carrottor/wwplayer-module-maker/tree/main/skills/wwplayer-mod
 安装后在新一轮对话中发送：
 
 ```text
-使用 $wwplayer-module-maker，基于以下接口样本制作一个 WWPlayer 模块。
-需要分类、分页、搜索、电影和多季剧集详情，以及播放时解析。
-接口地址与响应样本：……
+$wwplayer-module-maker
 ```
 
-也可以只制作字幕、弹幕或资源模块。提供来源地址、接口 / 页面样本及必要的认证方式。输出为本地 JS 与使用说明，之后在 WWPlayer 的“设置 → 模块”中导入。
+skill 会先展示可制作的类型：榜单 / 片单 / 专题、分类浏览、影视搜索、完整影视内容源、播放资源、字幕、弹幕或综合模块。选定后再逐步了解来源与功能，每轮只补充关键问题，不要求一次性准备全部资料。
+
+Cookie、Token、API Key、自定义请求头及登录认证只在可能相关时提示，可按需保留本地配置，不是固定必答题。来源确实需要认证的接口仍会说明实际要求及待验证部分。
+
+已有完整需求、来源或 JS 时也可以直接给出，skill 会沿用已知信息继续制作，不重复问答。输出为本地 JS 与使用说明，之后在 WWPlayer 的“设置 → 模块”中导入。
 
 skill 安装到 AI 编程工具中；生成的 JS 才是导入播放器的模块。
 
@@ -45,6 +47,7 @@ skill 安装到 AI 编程工具中；生成的 JS 才是导入播放器的模块
 
 - [完整开发指南](skills/wwplayer-module-maker/references/development-guide.md)：声明、参数、网络、缓存、详情、季集、资源、字幕和弹幕。
 - [制作配方](skills/wwplayer-module-maker/references/recipes.md)：按目标选择模板。
+- [问答指引](skills/wwplayer-module-maker/references/interview.md)：先选类型，再逐步了解来源和关键行为。
 - [迁移说明](skills/wwplayer-module-maker/references/migration.md)：外部 Widget 与 WWPlayer 的接口差异。
 - [8 个可导入模板](skills/wwplayer-module-maker/assets/templates/)：离线目录、公共元数据、JSON、HTML、纯资源、字幕、弹幕及组合来源。
 - [基础校验工具](skills/wwplayer-module-maker/scripts/check-module.mjs)：无需 npm 依赖，检查脚本语法、声明与函数。
