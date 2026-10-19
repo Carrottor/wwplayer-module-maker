@@ -1,0 +1,15 @@
+{
+  "name": "wwplayer-module-maker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-contained Agent Skill for authoring WWPlayer content modules",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test skills/wwplayer-module-maker/scripts/test-package.mjs",
+    "check:templates": "node skills/wwplayer-module-maker/scripts/check-module.mjs skills/wwplayer-module-maker/assets/templates"
+  },
+  "license": "MIT"
+}
