@@ -1,10 +1,10 @@
-# 按目标选择制作配方
+# 按已确认的能力选择制作配方
 
-本页所有模板随 skill 提供。只读当前目标所需示例，完整字段见[开发指南](development-guide.md)。
+本页是开发者的实现配方索引，不是启动时展示的模块类型。先通过问答明确影视内容、字幕或弹幕用途及所需能力，再选择以下配方。本页所有模板随 skill 提供，完整字段见[开发指南](development-guide.md)。
 
 ## 选择
 
-| 目标 | 起点 | 最小组合 |
+| 实现目标 / 能力 | 模板起点 | 技术入口组合 |
 | --- | --- | --- |
 | 静态片单、离线协议演示 | [离线目录](../assets/templates/wwplayer-offline-catalog.js) | 按需求保留列表 / 搜索 / 详情 |
 | 榜单、专题与分类 | [公共元数据目录](../assets/templates/wwplayer-tmdb-catalog.js) | 列表，按需加分类与搜索 |
@@ -15,7 +15,7 @@
 | 同一服务的字幕与弹幕 | [组合接口](../assets/templates/wwplayer-subtitle-danmaku.js) | subtitle + danmu |
 | HTML 电影站 | [HTML 来源](../assets/templates/wwplayer-html-catalog.js) | 列表 + 搜索 + loadDetail |
 
-## 列表、分类和搜索
+## 影视内容：列表、分类和搜索
 
 先确定来源能提供公共媒体身份，还是自己的详情引用。公共元数据条目使用确切 ID；自有来源保留原始 ID 与 link。用户只需片单时，无需增加资源入口。
 
@@ -23,7 +23,7 @@
 
 搜索读取宿主关键词；按来源选择 page 或 offset，不同时引入两种分页约定。验证第二页、末页、筛选变化和结构错误，不能把错误页面当空列表。
 
-## 电影、季集与资源
+## 影视内容：电影、季集与资源
 
 需要完整选集时，读取离线目录的 `seasons` 示例；实际剧集和季集号必须来自用户来源数据。`loadDetail(link)` 在新 Worker 中执行，不能读取上一次调用的普通全局变量。
 
