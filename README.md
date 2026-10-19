@@ -4,17 +4,21 @@
 
 按影视内容、字幕、弹幕三类用途提供制作向导；列表、分类、搜索、详情、季集和播放解析等能力按需组合。接口基线为 WWPlayer 宿主契约 7。
 
+本 skill 采用 [Agent Skills 开放格式](https://agentskills.io/specification)，可通过下述安装器安装到 Claude Code、Codex、Cursor、OpenCode 等受支持工具。目前完成 Codex 实测，其他 Agent 尚未逐一验证。问答与代码生成不依赖 Codex 专用工具，自动检查取决于所用 Agent 的执行环境。
+
 ## 快速安装
 
-### Codex 一条命令安装
+### 通用命令行安装
 
-使用命令行安装时，需要 Node.js 22+：
+在装有 Node.js 22+ 的电脑终端运行：
 
 ```bash
-npx skills add Carrottor/wwplayer-module-maker --skill wwplayer-module-maker -a codex -g -y
+npx skills add Carrottor/wwplayer-module-maker --skill wwplayer-module-maker -g
 ```
 
-这是 Vercel 的第三方 `skills` CLI。去掉 `-g` 安装到当前项目；其他 Agent 的安装目标按该 CLI 的支持情况选择。
+按安装器提示选择使用的 Agent。`-g` 表示为所选 Agent 安装到用户目录，可跨项目使用；只在当前项目使用时去掉 `-g`。
+
+这是 Vercel 的第三方 [skills CLI](https://github.com/vercel-labs/skills)，具体支持的 Agent 及安装目录见其文档。
 
 ### 使用 Codex 内置安装 skill
 
@@ -25,17 +29,21 @@ npx skills add Carrottor/wwplayer-module-maker --skill wwplayer-module-maker -a 
 https://github.com/Carrottor/wwplayer-module-maker/tree/main/skills/wwplayer-module-maker
 ```
 
-或者把仓库的整个 `skills/wwplayer-module-maker` 文件夹放入项目 `.agents/skills/`。保留文件夹内的 references、assets 和 scripts；只复制 SKILL.md 会缺少资料。
+### 手动安装
+
+把仓库的整个 `skills/wwplayer-module-maker` 文件夹放入所用 Agent 规定的 skills 目录。例如，Codex 项目内使用 `.agents/skills/`。保留文件夹内的 references、assets、scripts 与 LICENSE；只复制 SKILL.md 会缺少资料。
 
 Node 是命令行安装和自动检查工具的运行条件，不是所有使用场景的前置条件。手机或纯聊天场景，在所用 AI 工具支持载入 skill / 资料时也可制作模块；不要求用户在手机安装开发环境。
 
 ## 使用
 
-安装后在新一轮对话中发送：
+安装后在新一轮对话中通过所用 Agent 的技能菜单调用，或直接描述：
 
 ```text
-$wwplayer-module-maker
+使用 wwplayer-module-maker，帮我制作一个 WWPlayer 模块。
 ```
+
+Codex 也可使用 `$wwplayer-module-maker` 显式调用。
 
 skill 先了解想做影视内容、字幕还是弹幕模块，再逐步了解所需能力和来源。影视内容可只提供资料或片单，也可提供可播放来源；搜索、分类、分页、多线路等在选定用途后按需补充，不作为同级模块类型。
 
