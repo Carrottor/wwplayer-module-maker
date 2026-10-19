@@ -8,7 +8,7 @@
 
 ### Codex 一条命令安装
 
-先安装 Node.js 22+，然后运行：
+使用命令行安装时，需要 Node.js 22+：
 
 ```bash
 npx skills add Carrottor/wwplayer-module-maker --skill wwplayer-module-maker -a codex -g -y
@@ -27,6 +27,8 @@ https://github.com/Carrottor/wwplayer-module-maker/tree/main/skills/wwplayer-mod
 
 或者把仓库的整个 `skills/wwplayer-module-maker` 文件夹放入项目 `.agents/skills/`。保留文件夹内的 references、assets 和 scripts；只复制 SKILL.md 会缺少资料。
 
+Node 是命令行安装和自动检查工具的运行条件，不是所有使用场景的前置条件。手机或纯聊天场景，在所用 AI 工具支持载入 skill / 资料时也可制作模块；不要求用户在手机安装开发环境。
+
 ## 使用
 
 安装后在新一轮对话中发送：
@@ -41,7 +43,9 @@ skill 先了解想做影视内容、字幕还是弹幕模块，再逐步了解�
 
 Cookie、Token、API Key、自定义请求头及登录认证只在可能相关时提示，可按需保留本地配置，不是固定必答题。来源确实需要认证的接口仍会说明实际要求及待验证部分。
 
-已有完整需求、来源或 JS 时也可以直接给出，skill 会沿用已知信息继续制作，不重复问答。首次交付前会针对生成的 JS 做最小行为测试，输出模块、测试与使用说明，分别说明来源、宿主及播放器验证到哪里。
+已有完整需求、来源或 JS 时也可以直接给出，skill 会沿用已知信息继续制作。AI 有执行工具且获准时会测试本次生成 JS；无法执行时继续按契约和资料审阅，交付完整模块并标明未验证项，不强制安装 Node、Electron 或源码。
+
+有文件工具就提供 JS 文件，没有则给出完整可保存代码和文件名。验证结果只说明实际做过的工作；不把未执行写成通过，也不要求手机用户先完成测试才能拿到模块。
 
 skill 安装到 AI 编程工具中；生成的 JS 才是导入播放器的模块。
 
@@ -56,7 +60,7 @@ skill 安装到 AI 编程工具中；生成的 JS 才是导入播放器的模块
 - [声明检查](skills/wwplayer-module-maker/scripts/check-module.mjs)：无需 npm 依赖，检查脚本语法、声明与函数。
 - [入口执行测试](skills/wwplayer-module-maker/scripts/module-test-runtime.mjs)：用响应样本执行真实函数，检查参数、存储与默认 Chromium Referer 限制。
 
-## 本地检查
+## 可选的自动检查
 
 克隆本仓库后，使用 Node.js 22+：
 
@@ -70,7 +74,7 @@ node skills/wwplayer-module-maker/scripts/check-module.mjs ./my-module.js --json
 
 声明检查输出 DECLARATION PASS，只执行脚本顶层，不执行业务入口。包自身 npm test 通过也不能替代新模块的测试。入口测试工具不自动联网，并非完整宿主或安全沙箱，只用于自己制作或已审阅的代码。
 
-生成的模块需要自己的行为测试；列表、详情、资源应沿用返回的实际身份，API 与媒体请求头分别验证。Node/curl 请求成功不能替代 Electron/WWPlayer 验证，返回播放 URL 不等于已有画面、声音或可拖动。具体例子见验证与交付指南。
+有条件时为生成模块执行自己的行为测试；列表、详情、资源沿用返回身份，API 与媒体请求头分别验证。无执行环境则做代码 / 契约审阅并说明范围。Node/curl 成功不替代目标应用验证，播放 URL 不等于已有画面、声音或可拖动。具体例子见验证与交付指南。
 
 示例不附带内容服务、视频文件或账号。离线示例的浏览和详情无需网络，播放时填写自己的媒体 URL；其他模板按实际来源适配接口。
 
